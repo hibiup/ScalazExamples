@@ -1,4 +1,4 @@
-package HelloScalaz.samples
+package scalaz.examples
 
 import scalaz.Monad
 

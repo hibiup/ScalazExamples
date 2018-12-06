@@ -1,11 +1,10 @@
-package samples
+package scalaz.examples
 
 import org.scalatest.FlatSpec
-import scalaz.{Functor, Monad}
 
 class Scalaz_1_What_is_Monadic_test extends FlatSpec{
     "AddMonad" should "" in {
-        import HelloScalaz.samples.Scalaz_1_What_is_Monad._
+        import scalaz.examples.Scalaz_1_What_is_Monad._
 
         /** map */
         assert(Bag(1).map(x => x + 2).content == 3)
