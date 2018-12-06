@@ -104,10 +104,9 @@ object Scalaz_1_What_is_Monad {
 
             /** 3-2）bind 既是 flatMap，是具体执行数据操作的场所。
               *
-              * 根据 flatMap 的定义，它得到一个目标容器 ba，和对该容器的操作函数 f，然后将之施于其 bind 的容器上。
-              * 最后返回结果容器。
+              * 根据 flatMap 的定义，它得到一个目标容器 bag，和对该容器的操作函数 f，然后将之施于 bag 上。最后返回结果容器。
               * */
-            def bind[A, B](ba: Bag[A])(f: A => Bag[B]): Bag[B] = f(ba.content)
+            def bind[A, B](bag: Bag[A])(f: A => Bag[B]): Bag[B] = f(bag.content)
         }
 
         /** 4) 以隐式实现对容器的绑定，这个类将调用 Monad[Bag] 来完成运算。 */
