@@ -84,13 +84,15 @@ import scalaz.Monad
   * */
 object Scalaz_1_What_is_Monad {
     /** 1) 新建容器(数据类型为泛型) */
-    trait Bag[A] {
-        def content:A
-    }
+    trait Bag[+A]
+
+    /** 1-1）新建两个 case 分别代表容器中存在和不存在（Nothing）数据两种状态 */
+    case class FullBag[T](content:T) extends Bag[T]
+    case object EmptyBag extends Bag[Nothing]         // Nothing 是唯一实例
 
     object Bag {
         /** 2）数据装箱 */
-        def apply[A](a: A) = new Bag[A] { def content = a }
+        //def apply[A](a: A) = new FullBag(a)
 
         /**
           * 3）以 Monad trait 为基类，实现具体容器的 Monad。但是注意这个 Monad 不是 implicit class，它不与具体容器实例绑定。
@@ -100,13 +102,16 @@ object Scalaz_1_What_is_Monad {
           * */
         implicit object BagMonad extends Monad[Bag] {
             /** 3-1） point 的目的是把操作数装入高阶类型中以便于后面的操作。 */
-            def point[A](a: => A) = Bag(a)
+            def point[A](a: => A) = FullBag(a)
 
             /** 3-2）bind 既是 flatMap，是具体执行数据操作的场所。
               *
               * 根据 flatMap 的定义，它得到一个目标容器 bag，和对该容器的操作函数 f，然后将之施于 bag 上。最后返回结果容器。
               * */
-            def bind[A, B](bag: Bag[A])(f: A => Bag[B]): Bag[B] = f(bag.content)
+            def bind[A, B](bag: Bag[A])(f: A => Bag[B]): Bag[B] = bag match {
+                case FullBag(a) => f(a)   // 如果存在数据，则计算新的容器
+                case _ => EmptyBag        // 否则返回表示空的容器，会导致计算链条中止并返回 EmptyBag。
+            }
         }
 
         /** 4) 以隐式实现对容器的绑定，这个类将调用 Monad[Bag] 来完成运算。 */

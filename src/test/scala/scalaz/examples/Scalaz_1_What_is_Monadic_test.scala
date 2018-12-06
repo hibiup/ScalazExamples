@@ -7,27 +7,38 @@ class Scalaz_1_What_is_Monadic_test extends FlatSpec{
         import scalaz.examples.Scalaz_1_What_is_Monad._
 
         /** map */
-        assert(Bag(1).map(x => x + 2).content == 3)
+        assert(FullBag(1).map(x => x + 2) == FullBag(3))
 
         /** flatMap */
-        val abc1 = Bag(1) flatMap {a => Bag(2) flatMap {b => Bag(3) flatMap  {c => Bag(a+b+c) }}}
-        assert(abc1.content == 6)
+        val abc1 = FullBag(1) flatMap {a => FullBag(2) flatMap {b => FullBag(3) flatMap  {c => FullBag(a+b+c) }}}
+        assert(abc1 == FullBag(6))
 
         /** for  */
-        val abc2: Bag[Int] = for {
-               a <- Bag(1)
-               b <- Bag(2)
-               c <- Bag(3)
+        val abc2 = for {
+               a <- FullBag(1)
+               b <- FullBag(2)
+               c <- FullBag(3)
              } yield a + b + c
-        assert(abc2.content == 6)
+        assert(abc2 == FullBag(6))
 
-        val concatABC: Bag[String] =
+        /** Test string */
+        val concatABC =
             for {
-                a <- Bag("Hello")
-                b <- Bag(", ")
-                c <- Bag("World")
-                d <- Bag("!")
+                a <- FullBag("Hello")
+                b <- FullBag(", ")
+                c <- FullBag("World")
+                d <- FullBag("!")
              } yield ( a + b + c + d)
-        assert(concatABC.content == "Hello, World!")
+        assert(concatABC == FullBag("Hello, World!"))
+
+        /** Test EmptyBag*/
+        val emptyBag =
+            for {
+                a <- FullBag("Hello")
+                b <- EmptyBag: Bag[String]
+                c <- FullBag("World")
+                d <- FullBag("!")
+            } yield ( a + b + c + d)
+        assert(emptyBag == EmptyBag)
     }
 }
