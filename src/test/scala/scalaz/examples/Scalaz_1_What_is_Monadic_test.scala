@@ -20,5 +20,14 @@ class Scalaz_1_What_is_Monadic_test extends FlatSpec{
                c <- Bag(3)
              } yield a + b + c
         assert(abc2.content == 6)
+
+        val concatABC: Bag[String] =
+            for {
+                a <- Bag("Hello")
+                b <- Bag(", ")
+                c <- Bag("World")
+                d <- Bag("!")
+             } yield ( a + b + c + d)
+        assert(concatABC.content == "Hello, World!")
     }
 }
