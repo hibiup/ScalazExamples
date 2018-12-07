@@ -71,7 +71,7 @@ import scalaz.Monad
   * stack-overflow。
   */
 
-/**
+/**************************************************************
   * 下面以一个加法运算为例具体讲解 Monadic 编程，这个例子的需求是：
   *
   * val a = 1
@@ -82,7 +82,7 @@ import scalaz.Monad
   * Monadic 编程是一种将数据放在上下文（context）中然后将其放在“传送带”上进行传递的流式运算模型，因此我们首先需要建立用于装载操
   * 作数的“容器”（高阶类型），然后建立操作该容器的 Monad，并实现向对应操作的方法。具体的实现如下：
   * */
-object Scalaz_1_What_is_Monad {
+object Scalaz_1_What_is_Monad_1 {
     /** 1) 新建容器(数据类型为泛型) */
     trait Bag[+A]
 
@@ -122,5 +122,50 @@ object Scalaz_1_What_is_Monad {
             def map[B](f: A => B)(implicit monad: Monad[Bag]): Bag[B] = monad.map(b)(f)
         }
     }
+}
 
+
+/*******************************************************************
+  * 这是个更精巧的例子，实现和例１类似的功能，但是在结构上更精巧些．
+  *
+  * 这个例子用 trait 来作为容器，同时提供 flatMap 等接口（调用 Monad.bind）。使得接口分工更明确。
+  **/
+object Scalaz_2_Logging_Example_2 {
+    /** 3）实现 Scalaz Monad 接口。这个 implicit object 将被 Log trait 隐式获得。*/
+    implicit object BagMonad extends Monad[Bag] {
+        def point[T](k: => T): Bag[T] = Bag(k)
+        def bind[T, U](log: Bag[T])(f: T => Bag[U]): Bag[U] = f(log.content)
+    }
+
+    /** 1）用一个 trait 来取代 case class 作为容器模板（值存放在 content 中） */
+    trait Bag[+T] { self =>
+        def content:T
+
+        /** 2）trait 提供了 Scala 所需的 flatMap 等方法。它们其实最终指向 Scalaz Monad 接口。*/
+        def flatMap[U](f: T => Bag[U]): Bag[U] = implicitly[Monad[Bag]].bind(self)(f)
+        def map[U](f: T => U): Bag[U] = implicitly[Monad[Bag]].map(self)(f)
+    }
+
+    /** 4）定义容器 object，无法 extends 自 trait，因为我们不打算将容器的类型确定下来。 */
+    object Bag{
+        /** 4-1）实例化 trait，根据参数确定容器类型。 */
+        def apply[T](c:T):Bag[T] = new Bag[T] {
+            override def content: T = c
+        }
+    }
+}
+
+/********************************************
+  * 甚至还可以将所有的内容写在一个 case class 里
+  **/
+object Scalaz_2_Logging_Example_3 {
+    /** 1) 继承 Scalaz Monad，实现必要功能 */
+    case class Bag[T](content:T) extends Monad[Bag] { self =>
+        def point[T](k: => T): Bag[T] = Bag(k)
+        def bind[T, U](log: Bag[T])(f: T => Bag[U]): Bag[U] = f(log.content)
+
+        /** 2）实现 Scala 所需的 flatMap 等方法。它们其实最终指向 Scalaz Monad 接口。*/
+        def flatMap[U](f: T => Bag[U]): Bag[U] = bind(self)(f)
+        def map[U](f: T => U): Bag[U] = map(self)(f)
+    }
 }
