@@ -91,20 +91,17 @@ object Scalaz_1_What_is_Monad {
     case object EmptyBag extends Bag[Nothing]         // Nothing 是唯一实例
 
     object Bag {
-        /** 2）数据装箱 */
-        //def apply[A](a: A) = new FullBag(a)
-
         /**
-          * 3）以 Monad trait 为基类，实现具体容器的 Monad。但是注意这个 Monad 不是 implicit class，它不与具体容器实例绑定。
+          * 2）以 Monad trait 为基类，实现具体容器的 Monad。但是注意这个 Monad 不是 implicit class，它不与具体容器实例绑定。
           *    它只是一个包含操作的类，因此它被定义为 implicit object，意为在系统中同时隐式建立了一个 Monad[Bag]，这个实例只包
           *    含操作，不包含目标容器，它将在第 4 步被隐式做用于目标容器。
           *
           * */
         implicit object BagMonad extends Monad[Bag] {
-            /** 3-1） point 的目的是把操作数装入高阶类型中以便于后面的操作。 */
+            /** 2-1） point 的目的是把操作数装入高阶类型中以便于后面的操作。 */
             def point[A](a: => A) = FullBag(a)
 
-            /** 3-2）bind 既是 flatMap，是具体执行数据操作的场所。
+            /** 2-2）bind 既是 flatMap，是具体执行数据操作的场所。
               *
               * 根据 flatMap 的定义，它得到一个目标容器 bag，和对该容器的操作函数 f，然后将之施于 bag 上。最后返回结果容器。
               * */
@@ -114,14 +111,14 @@ object Scalaz_1_What_is_Monad {
             }
         }
 
-        /** 4) 以隐式实现对容器的绑定，这个类将调用 Monad[Bag] 来完成运算。 */
+        /** 3) 以隐式实现对容器的绑定，这个类将调用 Monad[Bag] 来完成运算。 */
         implicit class BagMonadOps[A](b:Bag[A]) {
-            /** 4-1）实现 Monad。
+            /** 3-1）实现 Monad。
               *
               * 隐式将第 3 步定义的 implicit object 实例作为参数。*/
             def flatMap[B](f: A => Bag[B])(implicit monad: Monad[Bag]): Bag[B] = monad.bind(b)(f)
 
-            /** 4-2) 实现 Functor */
+            /** 3-2) 实现 Functor */
             def map[B](f: A => B)(implicit monad: Monad[Bag]): Bag[B] = monad.map(b)(f)
         }
     }
