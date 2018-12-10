@@ -2,9 +2,9 @@ package scalaz.examples
 
 import org.scalatest.FlatSpec
 
-class Scalaz_1_What_is_Monadic_test extends FlatSpec{
+class Example_1_What_is_Monadic_test extends FlatSpec{
     "Bag Monad test 1" should "" in {
-        import scalaz.examples.Scalaz_1_What_is_Monad_1._
+        import scalaz.examples.Example_1_What_is_Monad_1._
 
         /** map */
         assert(FullBag(1).map(x => x + 2) == FullBag(3))

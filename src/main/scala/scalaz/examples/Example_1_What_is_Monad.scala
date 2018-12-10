@@ -82,7 +82,7 @@ import scalaz.{Monad, MonadPlus}
   * Monadic 编程是一种将数据放在上下文（context）中然后将其放在“传送带”上进行传递的流式运算模型，因此我们首先需要建立用于装载操
   * 作数的“容器”（高阶类型），然后建立操作该容器的 Monad，并实现向对应操作的方法。具体的实现如下：
   * */
-object Scalaz_1_What_is_Monad_1 {
+object Example_1_What_is_Monad_1 {
     /** 1) 新建容器(数据类型为泛型) */
     trait Bag[+A]
 
