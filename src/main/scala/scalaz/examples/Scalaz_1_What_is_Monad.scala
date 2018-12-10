@@ -1,6 +1,6 @@
 package scalaz.examples
 
-import scalaz.Monad
+import scalaz.{Monad, MonadPlus}
 
 /**
   * FP 编程和 OOP 编程最大的区别就是 FP 编程要求数据在某种容器（context）里进行状态转变（transformation）。形象点表达就是F[T]。
@@ -66,8 +66,8 @@ import scalaz.Monad
   * 从 flatMap 串联可以观察到因为重新打包的存在，所以不会出现一个结果包着另一个结果的情况，这特别符合 Monad 运算的关联依赖性和串联要
   * 求。并且针对于 Option Monad 来说，如果前面的运算产生结果是 None 的话，串联运算就终止并直接返回 None 作为整串运算的结果。
   *
-  * 值得提醒的是连串的 flatMap 其实是一种递归算法（只不过作用于不同的函数），所以，直接使用 Monad 编程是不安全的，必须与 Trampling
-  * 数据结构配合使用才行。正确安全的 Monad 使用方式是通过 Trampling 结构存放原本在堆栈上的函数调用参数，以 heap 替换 stack 来防止
+  * 值得提醒的是连串的 flatMap 其实是一种递归算法（只不过作用于不同的函数），所以，直接使用 Monad 编程是不安全的，必须与 Trampoline
+  * 数据结构配合使用才行。正确安全的 Monad 使用方式是通过 Trampoline 结构存放原本在堆栈上的函数调用参数，以 heap 替换 stack 来防止
   * stack-overflow。
   */
 
@@ -152,20 +152,5 @@ object Scalaz_2_Logging_Example_2 {
         def apply[T](c:T):Bag[T] = new Bag[T] {
             override def content: T = c
         }
-    }
-}
-
-/********************************************
-  * 甚至还可以将所有的内容写在一个 case class 里
-  **/
-object Scalaz_2_Logging_Example_3 {
-    /** 1) 继承 Scalaz Monad，实现必要功能 */
-    case class Bag[T](content:T) extends Monad[Bag] { self =>
-        def point[T](k: => T): Bag[T] = Bag(k)
-        def bind[T, U](log: Bag[T])(f: T => Bag[U]): Bag[U] = f(log.content)
-
-        /** 2）实现 Scala 所需的 flatMap 等方法。它们其实最终指向 Scalaz Monad 接口。*/
-        def flatMap[U](f: T => Bag[U]): Bag[U] = bind(self)(f)
-        def map[U](f: T => U): Bag[U] = map(self)(f)
     }
 }

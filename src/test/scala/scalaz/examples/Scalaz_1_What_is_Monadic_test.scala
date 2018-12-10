@@ -67,20 +67,4 @@ class Scalaz_1_What_is_Monadic_test extends FlatSpec{
             } yield ( a + b + c + d)
         assert(concatABC.content == "Hello, World!")
     }
-
-    "Bag Monad test 3"should "" in {
-        import scalaz.examples.Scalaz_2_Logging_Example_3._
-
-        println(Bag(1).map(x => x + 2))
-
-        /** Test string */
-        val concatABC =
-            for {
-                a <- Bag("Hello")
-                b <- Bag(", ")
-                c <- Bag("World")
-                d <- Bag("!")
-            } yield ( a + b + c + d)
-        assert(concatABC == Bag("Hello, World!"))
-    }
 }

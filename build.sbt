@@ -1,4 +1,4 @@
-name := "HelloScalaz"
+name := "FreeMonad"
 
 version := "1.0"
 
