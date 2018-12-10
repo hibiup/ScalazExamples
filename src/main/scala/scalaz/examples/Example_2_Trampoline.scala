@@ -36,9 +36,10 @@ object Example_2_Trampoline_1 {
         case _ :: t => More(() => even(t))  // 如果是 case _ :: t =>  even(t) 则不能优化成尾递归。
     }   // 返回 Trampoline[Boolean]，恰好是 odd 的返回类型，哪怕实际上调用的实 even. 因此欺骗了编译器。
 
+    /** 如果把两者统一，就能看出，其实还是一个尾递归．*/
     def compu[A](as:List[A]):Trampoline[Boolean] = as match {
         case Nil => Done(true)
-        case _ :: t => compu(t)   // 如果是 case _ :: t =>  odd(t) 则不能优化成尾递归。
+        case _ :: t => compu(t)
     }
 }
 
