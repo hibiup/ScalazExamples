@@ -28,43 +28,74 @@ package scalaz.examples
   * 因此有以下实现：
   */
 
-object Example_2_Trampoline_1 {
-    /** 1) 定义 Trampoline[+A] 容器，也就是以上第一条。 */
+object Example_3_Trampoline_1 {
+    /** 1) 定义 Trampoline[+A] 容器，这个容器只考虑尾递归条件，解决以上第二条。因此需要注意的是，这个 runT 函数真正启动了递归的执行． */
     trait Trampoline[+A] {
-        /** 2）这个容器只考虑尾递归条件，解决以上第二条，*/
         final def runT: A = this match {
+            /**
+              * 5）Done 或 More 本身只是一个存有函数( ()=>odd() 或 ()=>even() )的容器，直到容器内的函数 () 被执行后返回新的
+              * 容器，然后再次被 runT 驱动去完成下一步。
+              * */
+            case More(k) => k().runT   // 调用 More中的无参函数
             case Done(a) => a
-            case More(k) => k().runT
         }
     }
 
-    /** 2-1）由 Trampoline[+A] 派生出两个类：Done 和 More。*/
+    /** 2）由 Trampoline[+A] 派生出两个类：Done 和 More。Done 或 More 本身只是一个存有函数( ()=>odd() 或 ()=>even() )的容器，
+      *    它们本身不会主动执行，直到 Trampoline.runT 提取出容器内的函数并显式调用“()” 才被执行。*/
     case class Done[+A](a: A) extends Trampoline[A]
     case class More[+A](k: () => Trampoline[A]) extends Trampoline[A]
 
     /**
-      * 3）修改以上函数，应用 Trampoline
+      * 3）对函数应用 Trampoline，让不同的函数都返回 Trampoline，也就是满足以上第一条。
       */
     def even[A](as: List[A]): Trampoline[Boolean] = as match {
+        /** 4-1）返回含有无参函数容器More。如果是 case _ :: t =>  odd(t) 则不能优化成尾递归。
+          *     More 中的无参函数实际指向 odd 函数，因此当这个函数被执行的时候，实际返回了 odd(t) 的返回值。（又一个Done 或 More）*/
+        case _ :: t => More(() => odd(t))
+        /** 4-2) */
         case Nil => Done(true)
-        case _ :: t => More(() => odd(t))   // 如果是 case _ :: t =>  odd(t) 则不能优化成尾递归。
     }    // 返回 Trampoline[Boolean]，恰好是 even 的返回类型，哪怕实际上调用的实 odd. 因此欺骗了编译器。
 
+    /** 3-2) 同上*/
     def odd[A](as: List[A]): Trampoline[Boolean] = as match {
         case Nil => Done(false)
-        case _ :: t => More(() => even(t))  // 如果是 case _ :: t =>  even(t) 则不能优化成尾递归。
-    }   // 返回 Trampoline[Boolean]，恰好是 odd 的返回类型，哪怕实际上调用的实 even. 因此欺骗了编译器。
+        case _ :: t => More(() => even(t))
+    }
 
 
-    /** 如果把两者统一，就能看出，其实还是一个尾递归．*/
-    def compu[A](as:List[A]):Trampoline[Boolean] = as match {
+    /** 另）如果把两者合并，就能得到一个 Trampoline 版的 flatMap．*/
+    def FlatMap[A](as:List[A]):Trampoline[Boolean] = as match {
         case Nil => Done(true)
-        case _ :: t => compu(t)
+        case _ :: t => More(() => FlatMap(t))
     }
 }
 
+/**
+  * 以一个更复杂的 State Monad 为例
+  **/
+object Example_3_Trampoline_StateMonad {
+    case class State[S, +A](runS: S => (A, S)) {
+        import State._
+
+        def flatMap[B](f: A => State[S, B]): State[S, B] = State[S, B] { s => {
+            val (a1,s1) = runS(s)
+            f(a1) runS s1
+        }}
+
+        def map[B](f: A => B): State[S,B] = flatMap( a => unit(f(a)))
+    }
+
+    object State {
+        def unit[S,A](a: A) = State[S,A] { s => (a,s) }
+        def getState[S]: State[S,S] = State[S,S] { s => (s,s) }
+        def setState[S](s: S): State[S,Unit] = State[S,Unit] { _ => ((),s)}
+    }
+}
+
+
 /** 以下是一个 Scalaz-zio 的 Trampoline。它用 IO 取代了 Trampoline 类。*/
-object Example_2_Trampoline_2 {
+object Example_3_Trampoline_ZIO {
     import scalaz.zio.IO
     def fibIO(n:Int, a:BigInt=0, b:BigInt=1):IO[Error, BigInt] = {
         /** Scalaz zio 提供了异步功能 */

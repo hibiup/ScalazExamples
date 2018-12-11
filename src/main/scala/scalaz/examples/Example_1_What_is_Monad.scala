@@ -3,6 +3,8 @@ package scalaz.examples
 import scalaz.{Monad, MonadPlus}
 
 /**
+  * 参考：https://www.cnblogs.com/tiger-xc/p/4917081.html
+  *
   * FP 编程和 OOP 编程最大的区别就是 FP 编程要求数据在某种容器（context）里进行状态转变（transformation）。形象点表达就是F[T]。
   * F[] 就是各种独特的壳子（context）而 T 就是需要运算转变 U 的某种类型值。FP 程序的结果形象描述就好像F[T] => F[U]： 代表在F[]
   * 壳子内对T 进行运算，并把结果 U 保存在F[]内。Scalaz 通过 Functor, Applicative, Monad 提供了三种基本的函数施用方式，它们都
@@ -12,8 +14,8 @@ import scalaz.{Monad, MonadPlus}
   * 2、 Applicative:  ap[T,U]     (F[T])(f: F[T => U]): F[U]
   * 3 、Monad      :  flatMap[T,U](F[T])(f: T => F[U]): F[U]
   *
-  * 所以可以说 Monadic typeclass 提供了规范的FP 编程框架（template）,程序员可以使用这些框架进行FP编程。（Monadic typeclass 不
-  * 是数据类型，而是代表着某些编程的模式）
+  * 所以可以说 Monadic typeclass 提供了规范的FP 编程框架（template）,程序员可以使用这些框架进行FP　编程。或者说　Monadic typeclass
+  * 是代表着FP 编程的范式，不同的 Monad 代表着不同的数据处理模型。如以 Option Monad 为例，它代表的是单数据无效时终止运算的范式。
   */
 
 /**
