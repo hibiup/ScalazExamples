@@ -2,6 +2,8 @@ package scalaz.examples
 
 import scalaz.State
 
+import scala.annotation.tailrec
+
 /**
   * 参考：https://www.cnblogs.com/tiger-xc/p/5038311.html
   *
@@ -88,13 +90,22 @@ object Example_2_State_Monad_fib {
     case class More[+A](k: () => Trampoline[A]) extends Trampoline[A]
 
     /** Fibonacci */
+    private def next: State[(BigInt, BigInt), Unit] = State { s => ((s._2, s._1 + s._2), ()) }
+
     def Fib(index:Int, pre:(BigInt,BigInt)=(0,1)):Trampoline[(BigInt,BigInt)] = index match {
         case 0 => Done(pre)
         case x => More(() => Fib(x-1, next.exec(pre)))
     }
 
-    private def next: State[(BigInt, BigInt), Unit] = State { s => ((s._2, s._1 + s._2), ()) }
-
     /** Test */
     val res = Fib(100000).run._1
+
+    // 不用 trampoline 的话，尾递归直接搞定。
+    @tailrec
+    def fib(index:Int, pre:(BigInt,BigInt)=(0,1)):(BigInt,BigInt) = {
+        if (index >0) fib(index-1, next.exec(pre))
+        else pre
+    }
+
+    val r2 = fib(100000)._1
 }
