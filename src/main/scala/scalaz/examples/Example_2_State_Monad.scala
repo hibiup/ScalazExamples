@@ -72,3 +72,29 @@ object Example_2_State_Monad_1 {
                         d)))))      // map[B](f:(3) => 4 ):State[S, B] = (List(2), 4)
     assert(x.run(List()) == (List(2), 4))
 }
+
+/**
+  * 一下是一个用 State Monad 来计算 Fibonacci 的例子，用到 Trampoline
+  **/
+object Example_2_State_Monad_fib {
+    /** Trampoline */
+    trait Trampoline[+A] {
+        final def run: A = this match {
+            case More(k) => k().run
+            case Done(a) => a
+        }
+    }
+    case class Done[+A](a: A) extends Trampoline[A]
+    case class More[+A](k: () => Trampoline[A]) extends Trampoline[A]
+
+    /** Fibonacci */
+    def Fib(index:Int, pre:(BigInt,BigInt)=(0,1)):Trampoline[(BigInt,BigInt)] = index match {
+        case 0 => Done(pre)
+        case x => More(() => Fib(x-1, next.exec(pre)))
+    }
+
+    private def next: State[(BigInt, BigInt), Unit] = State { s => ((s._2, s._1 + s._2), ()) }
+
+    /** Test */
+    val res = Fib(100000).run._1
+}
